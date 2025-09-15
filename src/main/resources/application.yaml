@@ -13,4 +13,7 @@ spring.jpa:
   properties:
     hibernate.format_sql: true
 
+logging:
+  level:
+    nortify.notify: DEBUG
 
