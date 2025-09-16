@@ -15,5 +15,18 @@ spring.jpa:
 
 logging:
   level:
-    nortify.notify: DEBUG
+    notify: DEBUG
 
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - https://your-frontend.example.com
+  allowed-methods:
+    - GET
+    - POST
+    - PATCH
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true

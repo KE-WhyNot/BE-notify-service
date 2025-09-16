@@ -2,12 +2,14 @@ package notify.domain.notify.ui.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nortify.notify.domain.notify.application.dto.request.*;
-import notify.domain.notify.application.dto.request.*;
-import notify.domain.notify.domain.service.NotificationCommandService;
+import notify.domain.notify.application.dto.request.DividendNotificationRequest;
+import notify.domain.notify.application.dto.request.InterestAreaNotificationRequest;
+import notify.domain.notify.application.dto.request.InterestStockNotificationRequest;
+import notify.domain.notify.application.dto.request.RankingEnteredRequest;
+import notify.domain.notify.application.dto.request.TradeNotificationRequest;
+import notify.domain.notify.usecase.NotificationUseCase;
 import notify.global.common.BaseResponse;
 import notify.global.swagger.BaseApi;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static notify.global.exception.code.status.SuccessCode.CREATED;
@@ -17,45 +19,50 @@ import static notify.global.exception.code.status.SuccessCode.CREATED;
 @RequestMapping("/api/internal/notifications")
 public class InternalNotificationController implements BaseApi {
 
-    private final NotificationCommandService commandService;
+    private final NotificationUseCase notificationUseCase;
 
     @PostMapping("/ranking-entered")
-    public ResponseEntity<BaseResponse<Void>> rankingEntered(
+    public BaseResponse<Void> rankingEntered(
+            @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody RankingEnteredRequest req
     ) {
-        commandService.createRankingNotification(req);
-        return BaseResponse.success(CREATED);
+        notificationUseCase.createRankingNotification(req);
+        return BaseResponse.success(CREATED).getBody();
     }
 
     @PostMapping("/trade")
-    public ResponseEntity<BaseResponse<Void>> trade(
+    public BaseResponse<Void> trade(
+            @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody TradeNotificationRequest req
     ) {
-        commandService.createTradeNotification(req);
-        return BaseResponse.success(CREATED);
+        notificationUseCase.createTradeNotification(req);
+        return BaseResponse.success(CREATED).getBody();
     }
 
     @PostMapping("/interest-stock")
-    public ResponseEntity<BaseResponse<Void>> interestStock(
+    public BaseResponse<Void> interestStock(
+            @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody InterestStockNotificationRequest req
     ) {
-        commandService.createInterestStockNotification(req);
-        return BaseResponse.success(CREATED);
+        notificationUseCase.createInterestStockNotification(req);
+        return BaseResponse.success(CREATED).getBody();
     }
 
     @PostMapping("/dividend")
-    public ResponseEntity<BaseResponse<Void>> dividend(
+    public BaseResponse<Void> dividend(
+            @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody DividendNotificationRequest req
     ) {
-        commandService.createDividendNotification(req);
-        return BaseResponse.success(CREATED);
+        notificationUseCase.createDividendNotification(req);
+        return BaseResponse.success(CREATED).getBody();
     }
 
     @PostMapping("/interest-area")
-    public ResponseEntity<BaseResponse<Void>> interestArea(
+    public BaseResponse<Void> interestArea(
+            @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody InterestAreaNotificationRequest req
     ) {
-        commandService.createInterestAreaNotification(req);
-        return BaseResponse.success(CREATED);
+        notificationUseCase.createInterestAreaNotification(req);
+        return BaseResponse.success(CREATED).getBody();
     }
 }

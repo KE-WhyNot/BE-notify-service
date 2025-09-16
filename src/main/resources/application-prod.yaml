@@ -11,4 +11,4 @@ server:
 logging:
   level:
     root: INFO
-    nortify.notify: INFO
+    notify: INFO

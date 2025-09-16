@@ -1,15 +1,10 @@
 package notify.domain.notify.ui.controller;
 
-
-
 import lombok.RequiredArgsConstructor;
-import notify.domain.notify.application.dto.NotificationListResponse;
-import notify.domain.notify.domain.service.NotificationCommandService;
-import notify.domain.notify.domain.service.NotificationQueryService;
+import notify.domain.notify.application.dto.response.NotificationListResponse;
+import notify.domain.notify.usecase.NotificationUseCase;
 import notify.global.common.BaseResponse;
 import notify.global.swagger.BaseApi;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import static notify.global.exception.code.status.SuccessCode.OK;
@@ -19,35 +14,35 @@ import static notify.global.exception.code.status.SuccessCode.OK;
 @RequestMapping("/api/notifications")
 public class NotificationController implements BaseApi {
 
-    private final NotificationQueryService queryService;
-    private final NotificationCommandService commandService;
+    private final NotificationUseCase notificationUseCase;
 
-    //전체 알림 조회
+    // 전체 알림 조회
     @GetMapping
-    public ResponseEntity<BaseResponse<NotificationListResponse>> list(
-            Authentication authentication,
+    public BaseResponse<NotificationListResponse> list(
+            @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        String userId = (String) authentication.getPrincipal(); // GatewayAuthFilter가 세팅
-        var body = queryService.findAll(userId, page, size);
-        return BaseResponse.success(OK, body);
+        NotificationListResponse body = notificationUseCase.listAll(userId, page, size);
+        return BaseResponse.success(OK, body).getBody();
     }
-    //읽음 처리
+
+    // 읽음 처리
     @PatchMapping("/{notificationId}/read")
-    public ResponseEntity<BaseResponse<Void>> markRead(
-            Authentication authentication,
+    public BaseResponse<Void> markRead(
+            @RequestHeader("X-User-Id") String userId,
             @PathVariable Long notificationId
     ) {
-        String userId = (String) authentication.getPrincipal();
-        commandService.markRead(userId, notificationId);
-        return BaseResponse.success(OK);
+        notificationUseCase.markRead(userId, notificationId);
+        return BaseResponse.success(OK).getBody();
     }
-    //전체 읽음 처리
+
+    // 전체 읽음 처리
     @PatchMapping("/read-all")
-    public ResponseEntity<BaseResponse<Integer>> markAllRead(Authentication authentication) {
-        String userId = (String) authentication.getPrincipal();
-        int updated = commandService.markAllRead(userId);
-        return BaseResponse.success(OK, updated);
+    public BaseResponse<Integer> markAllRead(
+            @RequestHeader("X-User-Id") String userId
+    ) {
+        int updated = notificationUseCase.markAllRead(userId);
+        return BaseResponse.success(OK, updated).getBody();
     }
 }

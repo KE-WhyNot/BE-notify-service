@@ -1,12 +1,13 @@
 package notify.domain.notify.application.dto.request;
 
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-@Getter @NoArgsConstructor
-public class RankingEnteredRequest {
-    private String userId;
-    private Integer rank;
-    private String message;
-}
+public record RankingEnteredRequest(
+        @NotBlank
+        String userId,
+        @NotNull
+        Integer rank,
+        String message
+) {}

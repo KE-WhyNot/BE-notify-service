@@ -1,8 +1,8 @@
 package notify.domain.notify.domain.service;
 
 import lombok.RequiredArgsConstructor;
-import notify.domain.notify.application.dto.NotificationListResponse;
-import notify.domain.notify.application.dto.NotificationResponse;
+import notify.domain.notify.application.dto.response.NotificationListResponse;
+import notify.domain.notify.application.dto.response.NotificationResponse;
 
 import notify.domain.notify.domain.repository.NotificationRepository;
 import org.springframework.data.domain.*;

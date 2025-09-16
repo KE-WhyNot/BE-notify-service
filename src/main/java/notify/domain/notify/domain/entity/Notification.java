@@ -9,7 +9,7 @@ import notify.global.common.BaseEntity;
 import org.hibernate.annotations.Comment;
 
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -65,7 +65,7 @@ public class Notification extends BaseEntity {
     private Integer dividendAmount;
 
     @Comment("DIVIDEND only")
-    private LocalDate paymentDate;
+    private LocalDateTime paymentDate;
 
     public void markRead() { this.read = true; }
 
