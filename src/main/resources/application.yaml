@@ -13,4 +13,20 @@ spring.jpa:
   properties:
     hibernate.format_sql: true
 
+logging:
+  level:
+    notify: DEBUG
 
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - https://your-frontend.example.com
+  allowed-methods:
+    - GET
+    - POST
+    - PATCH
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true
