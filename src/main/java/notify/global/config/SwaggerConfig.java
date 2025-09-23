@@ -13,13 +13,17 @@ public class SwaggerConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .components(new Components()
-                        .addSecuritySchemes("UserIdHeader",
-                                new SecurityScheme().type(SecurityScheme.Type.APIKEY)
-                                        .in(SecurityScheme.In.HEADER).name("X-User-Id")
-                                        .description("게이트웨이가 검증 후 전달한 사용자 ID")))
+                        .addSecuritySchemes("BearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("JWT 토큰을 입력하세요. 예: Bearer <your-jwt-token>")))
                 .addSecurityItem(new SecurityRequirement()
-                        .addList("GatewaySignature").addList("UserIdHeader"))
-                .info(new Info().title("Notify API").version("v1")
+                        .addList("BearerAuth"))
+                .info(new Info()
+                        .title("Notify API")
+                        .version("v1")
                         .description("알림 생성(내부) + 알림함 조회/읽음(사용자)"));
     }
 }

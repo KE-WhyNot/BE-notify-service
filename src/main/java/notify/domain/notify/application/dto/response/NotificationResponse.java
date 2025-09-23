@@ -20,7 +20,6 @@ public record NotificationResponse(
         Instant filledAt,
         Integer dividendAmount,
         LocalDateTime paymentDate,
-        String topic,
         String message,
         Instant createdAt,
         boolean read
@@ -39,7 +38,6 @@ public record NotificationResponse(
                 n.getFilledAt(),
                 n.getDividendAmount(),
                 n.getPaymentDate(),
-                n.getTopic(),
                 n.getMessage(),
                 n.getCreatedAt(),
                 n.isRead()

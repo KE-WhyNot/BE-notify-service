@@ -39,7 +39,7 @@ public class Notification extends BaseEntity {
     @Comment("공통 종목 식별")
     private String stockCode;
 
-    @Comment("INTERESTSTOCK/DIVIDEND/TRADE")
+    @Comment("DIVIDEND/TRADE")
     private String stockName;
 
     @Comment("TRADE only")
@@ -58,8 +58,6 @@ public class Notification extends BaseEntity {
     @Comment("TRADE only")
     private Instant filledAt;
 
-    @Comment("INTERESTAREA only")
-    private String topic;
 
     @Comment("DIVIDEND only")
     private Integer dividendAmount;
