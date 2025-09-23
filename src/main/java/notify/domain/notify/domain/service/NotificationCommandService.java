@@ -2,8 +2,6 @@ package notify.domain.notify.domain.service;
 
 import lombok.RequiredArgsConstructor;
 import notify.domain.notify.application.dto.request.DividendNotificationRequest;
-import notify.domain.notify.application.dto.request.InterestAreaNotificationRequest;
-import notify.domain.notify.application.dto.request.InterestStockNotificationRequest;
 import notify.domain.notify.application.dto.request.RankingEnteredRequest;
 import notify.domain.notify.application.dto.request.TradeNotificationRequest;
 import notify.domain.notify.domain.entity.Notification;
@@ -66,21 +64,6 @@ public class NotificationCommandService {
         return repo.save(n).getId();
     }
 
-    //INTERESTSTOCK
-    public Long createInterestStockNotification(InterestStockNotificationRequest r) {
-        Notification n = Notification.builder()
-                .userId(r.userId())
-                .type(NotificationType.INTERESTSTOCK)
-                .stockCode(r.stockCode())
-                .stockName(r.stockName())
-                .quantity(r.quantity())
-                .price(r.price())
-                .side(r.side()!=null && r.side().equalsIgnoreCase("BUY") ? TradeSide.BUY :
-                        (r.side()!=null && r.side().equalsIgnoreCase("SELL") ? TradeSide.SELL : null))
-                .message(r.message())
-                .build();
-        return repo.save(n).getId();
-    }
 
     //DIVIDEND
     public Long createDividendNotification(DividendNotificationRequest r) {
@@ -103,14 +86,4 @@ public class NotificationCommandService {
         return repo.save(n).getId();
     }
 
-    // INTERESTAREA
-    public Long createInterestAreaNotification(InterestAreaNotificationRequest r) {
-        Notification n = Notification.builder()
-                .userId(r.userId())
-                .type(NotificationType.INTERESTAREA)
-                .topic(r.topic())
-                .message(r.message())
-                .build();
-        return repo.save(n).getId();
-    }
 }

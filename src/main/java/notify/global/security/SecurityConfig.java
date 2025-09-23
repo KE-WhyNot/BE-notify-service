@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notify.global.exception.code.status.GlobalErrorCode;
 import org.slf4j.MDC;
@@ -30,10 +31,12 @@ import java.util.UUID;
 import java.util.List;
 
 @Configuration
+@RequiredArgsConstructor
 @Slf4j
 public class SecurityConfig {
 
     private final ObjectMapper om = new ObjectMapper();
+    private final JwtUtil jwtUtil;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -50,7 +53,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler())
                 )
-                .addFilterBefore(new UserIdHeaderFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -83,12 +86,16 @@ public class SecurityConfig {
         res.getWriter().write(om.writeValueAsString(body));
     }
 
-    /**
-     * Ingress가 셋팅한 X-User-Id 헤더로 인증 컨텍스트 구성 + 보안 로깅
-     */
-    static class UserIdHeaderFilter extends OncePerRequestFilter {
-        private static final String HDR_USER_ID = "X-User-Id";
-        private static final String HDR_REQ_ID  = "X-Request-Id";
+
+    static class JwtAuthenticationFilter extends OncePerRequestFilter {
+        private static final String HDR_AUTHORIZATION = "Authorization";
+        private static final String HDR_REQ_ID = "X-Request-Id";
+        
+        private final JwtUtil jwtUtil;
+
+        public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+            this.jwtUtil = jwtUtil;
+        }
 
         @Override
         protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -107,33 +114,39 @@ public class SecurityConfig {
 
             long startNs = System.nanoTime();
 
-            //테스트용
             String uri = req.getRequestURI();
             String method = req.getMethod();
             String client = req.getRemoteAddr();
-            String userIdHeader = req.getHeader(HDR_USER_ID);
+            String authHeader = req.getHeader(HDR_AUTHORIZATION);
 
-            log.info("[SEC] IN {} {} ip={} userIdHdr={} traceId={}",
-                    method, uri, client, safe(userIdHeader), traceId);
+            log.info("[SEC] IN {} {} ip={} authHdr={} traceId={}",
+                    method, uri, client, safe(authHeader), traceId);
 
             try {
-                // 인증 컨텍스트 세팅
+                // JWT 토큰 인증 처리
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    if (userIdHeader != null && !userIdHeader.isBlank()) {
-                        var auth = new UsernamePasswordAuthenticationToken(
-                                userIdHeader, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                        );
-                        SecurityContextHolder.getContext().setAuthentication(auth);
-                        log.debug("[SEC] Authenticated principal={} traceId={}", userIdHeader, traceId);
+                    String token = jwtUtil.extractTokenFromHeader(authHeader);
+                    
+                    if (token != null && jwtUtil.validateToken(token) && !jwtUtil.isTokenExpired(token)) {
+                        String userId = jwtUtil.extractUserId(token);
+                        
+                        if (userId != null) {
+                            var auth = new UsernamePasswordAuthenticationToken(
+                                    userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            );
+                            SecurityContextHolder.getContext().setAuthentication(auth);
+                            log.debug("[SEC] JWT Authenticated principal={} traceId={}", userId, traceId);
+                        } else {
+                            log.debug("[SEC] Invalid JWT token - no userId traceId={}", traceId);
+                        }
                     } else {
-                        log.debug("[SEC] No X-User-Id header. Proceeding as anonymous. traceId={}", traceId);
+                        log.debug("[SEC] No valid JWT token. Proceeding as anonymous. traceId={}", traceId);
                     }
                 }
 
                 chain.doFilter(req, res);
 
             } catch (Exception e) {
-                // 예외
                 log.error("[SEC] Exception in filter: {} traceId={}", e.toString(), traceId);
                 throw e;
             } finally {
@@ -147,7 +160,9 @@ public class SecurityConfig {
         }
 
         private String safe(String v) {
-            // 민감값 마스킹,정규화..필요시..
+            if (v != null && v.startsWith("Bearer ")) {
+                return "Bearer ***";
+            }
             return v;
         }
     }

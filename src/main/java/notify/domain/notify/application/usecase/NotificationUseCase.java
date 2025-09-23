@@ -1,9 +1,7 @@
-package notify.domain.notify.usecase;
+package notify.domain.notify.application.usecase;
 
 import lombok.RequiredArgsConstructor;
 import notify.domain.notify.application.dto.request.DividendNotificationRequest;
-import notify.domain.notify.application.dto.request.InterestAreaNotificationRequest;
-import notify.domain.notify.application.dto.request.InterestStockNotificationRequest;
 import notify.domain.notify.application.dto.request.RankingEnteredRequest;
 import notify.domain.notify.application.dto.request.TradeNotificationRequest;
 import notify.domain.notify.application.dto.response.NotificationListResponse;
@@ -19,7 +17,6 @@ public class NotificationUseCase {
     private final NotificationCommandService commandService;
     private final NotificationQueryService queryService;
 
-    @Transactional(readOnly = true) // 조회 메서드는 readOnly로 오버라이드
     public NotificationListResponse listAll(String userId, int page, int size) {
         return queryService.findAll(userId, page, size);
     }
@@ -40,15 +37,9 @@ public class NotificationUseCase {
         return commandService.createTradeNotification(req);
     }
 
-    public Long createInterestStockNotification(InterestStockNotificationRequest req) {
-        return commandService.createInterestStockNotification(req);
-    }
 
     public Long createDividendNotification(DividendNotificationRequest req) {
         return commandService.createDividendNotification(req);
     }
 
-    public Long createInterestAreaNotification(InterestAreaNotificationRequest req) {
-        return commandService.createInterestAreaNotification(req);
-    }
 }
