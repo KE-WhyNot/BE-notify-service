@@ -11,19 +11,10 @@ public record NotificationResponse(
         NotificationType type,
         String title,
         String message,
-        Integer rank,
-        String stockId,
-        String stockName,
-        Boolean isBuy,
-        Integer quantity,
-        Long price,
-        String orderId,
-        Instant filledAt,
-        Long dividendAmount,
-        LocalDateTime paymentDate,
         String data,
         String dedupKey,
         Instant createdAt,
+        Instant readAt,
         boolean read
 ) {
     public static NotificationResponse from(Notification n) {
@@ -32,19 +23,10 @@ public record NotificationResponse(
                 n.getType(),
                 n.getTitle(),
                 n.getMessage(),
-                n.getRank(),
-                n.getStockId(),
-                n.getStockName(),
-                n.getIsBuy(),
-                n.getQuantity(),
-                n.getPrice(),
-                n.getOrderId(),
-                n.getFilledAt(),
-                n.getDividendAmount(),
-                n.getPaymentDate(),
                 n.getData(),
                 n.getDedupKey(),
                 n.getCreatedAt(),
+                n.getReadAt(),
                 n.isRead()
         );
     }
