@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     long countByUserIdAndReadAtIsNull(Long userId);
+    java.util.Optional<Notification> findByDedupKey(String dedupKey);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Notification n set n.readAt = CURRENT_TIMESTAMP where n.id = :id and n.userId = :userId and n.readAt is null")
