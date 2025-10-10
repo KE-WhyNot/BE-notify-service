@@ -35,6 +35,7 @@ public class DividendConsumerService {
 
             long dividendId = a.path("dividendId").asLong();
             String stockId  = a.path("stockId").asText(null);
+            String recordDate = a.path("recordDate").asText(null);
             String amount   = a.path("cashDividend").isNull() ? null : a.path("cashDividend").asText(); // 주당 배당
             String rate     = a.path("dividendRate").isNull() ? null : a.path("dividendRate").asText();
             String payDate  = a.path("dividendDate").isNull() ? null : a.path("dividendDate").asText(); // 'YYYY-MM-DD'
@@ -61,6 +62,7 @@ public class DividendConsumerService {
                    JSON_OBJECT(
                      'dividendId', ?,
                      'stockId', ?,
+                     'recordDate', ?,
                      'dividendDate', ?,
                      'cashDividend', ?,
                      'dividendRate', ?
@@ -69,7 +71,7 @@ public class DividendConsumerService {
                    NOW())
             """,
             userId, title, message,
-            dividendId, stockId, payDate, amount, rate,
+            dividendId, stockId, recordDate, payDate, amount, rate,
             dividendId, userId);
 
             log.info("DIVIDEND notify inserted userId={} dividendId={} rows={}", userId, dividendId, n);
