@@ -1,11 +1,29 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# --- OS ---
+.DS_Store
 
-### STS ###
+# --- IDE ---
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+
+# --- Gradle ---
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# --- Build outputs ---
+/build/
+**/build/
+out/
+**/out/
+bin/
+**/bin/
+
+# --- Logs ---
+*.log
+
+# --- Tools (STS/NetBeans) ---
 .apt_generated
 .classpath
 .factorypath
@@ -13,27 +31,17 @@ build/
 .settings
 .springBeans
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
-
+# --- App-specific secrets / env ---
+src/main/resources/secret/
 src/main/resources/application-dev.yaml
+# 샘플은 추적 (있다면)
+!src/main/resources/application-dev-example.yaml
+
+# --- Misc ---
+HELP.md
