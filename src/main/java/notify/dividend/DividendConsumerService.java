@@ -9,14 +9,17 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DividendConsumerService {
     private final JdbcTemplate jdbc;
     private final ObjectMapper om = new ObjectMapper();
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
-    /** Debezium topic: finance.finance.dividendInfo -> notify.dividend_notice UPSERT */
     @KafkaListener(topics = "finance.finance.dividendInfo", containerFactory = "kafkaListenerContainerFactory")
     public void onDividend(String value, Acknowledgment ack) {
         try {
@@ -27,29 +30,53 @@ public class DividendConsumerService {
             JsonNode a = root.path("payload").path("after");
             if (a.isMissingNode() || a.isNull()) { ack.acknowledge(); return; }
 
-            long dividendId     = a.path("dividendId").asLong();
-            String stockId      = a.path("stockId").asText(null);
-            Long sectorId       = a.path("sectorId").isNull() ? null : a.path("sectorId").asLong();
-            String recordDate   = a.path("recordDate").asText(null);
-            String cashDividend = a.path("cashDividend").isNull() ? null : a.path("cashDividend").asText();
-            String dividendRate = a.path("dividendRate").isNull() ? null : a.path("dividendRate").asText();
-            String dividendDate = a.path("dividendDate").isNull() ? null : a.path("dividendDate").asText();
+            Long userId     = a.path("userId").isNull() ? null : a.path("userId").asLong();
+            if (userId == null || userId <= 0) { ack.acknowledge(); return; }
 
+            long dividendId = a.path("dividendId").asLong();
+            String stockId  = a.path("stockId").asText(null);
+            String amount   = a.path("cashDividend").isNull() ? null : a.path("cashDividend").asText(); // 주당 배당
+            String rate     = a.path("dividendRate").isNull() ? null : a.path("dividendRate").asText();
+            String payDate  = a.path("dividendDate").isNull() ? null : a.path("dividendDate").asText(); // 'YYYY-MM-DD'
+
+            // 지급일=오늘(KST)만 알림 생성
+            if (payDate == null || !LocalDate.parse(payDate).isEqual(LocalDate.now(KST))) {
+                ack.acknowledge();
+                return;
+            }
+
+            // Title/Message (English)
+            String title = "Dividend Paid: " + (stockId != null ? stockId : "N/A");
+            String message = String.format("%s  %s  dividend  %s per share",
+                    payDate != null ? payDate : "",
+                    stockId != null ? stockId : "N/A",
+                    amount != null ? amount : "0");
+
+            // 멱등키: div:<dividendId>:<userId>
             int n = jdbc.update("""
-                INSERT INTO notify.dividend_notice
-                  (dividendId, stockId, sectorId, recordDate, cashDividend, dividendRate, dividendDate, createdAt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-                ON DUPLICATE KEY UPDATE
-                  stockId=VALUES(stockId), sectorId=VALUES(sectorId),
-                  recordDate=VALUES(recordDate), cashDividend=VALUES(cashDividend),
-                  dividendRate=VALUES(dividendRate), dividendDate=VALUES(dividendDate)
-            """, dividendId, stockId, sectorId, recordDate, cashDividend, dividendRate, dividendDate);
-            log.info("dividend_notice upserted id={} rows={}", dividendId, n);
+                INSERT IGNORE INTO notify.notification_event
+                  (userId, type, title, message, data, dedupKey, createdAt)
+                VALUES
+                  (?, 'DIVIDEND', ?, ?,
+                   JSON_OBJECT(
+                     'dividendId', ?,
+                     'stockId', ?,
+                     'dividendDate', ?,
+                     'cashDividend', ?,
+                     'dividendRate', ?
+                   ),
+                   CONCAT('div:', ?, ':', ?),
+                   NOW())
+            """,
+            userId, title, message,
+            dividendId, stockId, payDate, amount, rate,
+            dividendId, userId);
 
+            log.info("DIVIDEND notify inserted userId={} dividendId={} rows={}", userId, dividendId, n);
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Dividend consume failed: {}", e.toString(), e);
-            // no ack -> reprocess
+            // ack 생략 → 재처리
         }
     }
 }
