@@ -1,11 +1,6 @@
 package notify.domain.notify.usecase;
 
 import lombok.RequiredArgsConstructor;
-import notify.domain.notify.application.dto.request.DividendNotificationRequest;
-import notify.domain.notify.application.dto.request.InterestAreaNotificationRequest;
-import notify.domain.notify.application.dto.request.InterestStockNotificationRequest;
-import notify.domain.notify.application.dto.request.RankingEnteredRequest;
-import notify.domain.notify.application.dto.request.TradeNotificationRequest;
 import notify.domain.notify.application.dto.response.NotificationListResponse;
 import notify.domain.notify.domain.service.NotificationCommandService;
 import notify.domain.notify.domain.service.NotificationQueryService;
@@ -20,35 +15,16 @@ public class NotificationUseCase {
     private final NotificationQueryService queryService;
 
     @Transactional(readOnly = true) // 조회 메서드는 readOnly로 오버라이드
-    public NotificationListResponse listAll(String userId, int page, int size) {
+    public NotificationListResponse listAll(Long userId, int page, int size) {
         return queryService.findAll(userId, page, size);
     }
 
-    public void markRead(String userId, Long notificationId) {
+    public void markRead(Long userId, Long notificationId) {
         commandService.markRead(userId, notificationId);
     }
 
-    public int markAllRead(String userId) {
+    public int markAllRead(Long userId) {
         return commandService.markAllRead(userId);
     }
 
-    public Long createRankingNotification(RankingEnteredRequest req) {
-        return commandService.createRankingNotification(req);
-    }
-
-    public Long createTradeNotification(TradeNotificationRequest req) {
-        return commandService.createTradeNotification(req);
-    }
-
-    public Long createInterestStockNotification(InterestStockNotificationRequest req) {
-        return commandService.createInterestStockNotification(req);
-    }
-
-    public Long createDividendNotification(DividendNotificationRequest req) {
-        return commandService.createDividendNotification(req);
-    }
-
-    public Long createInterestAreaNotification(InterestAreaNotificationRequest req) {
-        return commandService.createInterestAreaNotification(req);
-    }
 }

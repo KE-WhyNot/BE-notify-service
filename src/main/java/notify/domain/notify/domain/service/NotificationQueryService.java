@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class NotificationQueryService {
     private final NotificationRepository repo;
 
-    public NotificationListResponse findAll(String userId, int page, int size) {
+    public NotificationListResponse findAll(Long userId, int page, int size) {
         var mapped = repo
                 .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
                 .map(NotificationResponse::from);

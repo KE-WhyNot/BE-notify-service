@@ -17,14 +17,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification extends BaseEntity {
-    @Column(nullable = false, length = 50)
-    private String userId;
+    @Column(nullable = false)
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private NotificationType type;
 
     @Column(nullable = false, length = 200)
+    private String title;
+
+    @Column(nullable = false, length = 500)
     private String message;
 
     @Column(name = "read_flag", nullable = false)
@@ -37,14 +40,13 @@ public class Notification extends BaseEntity {
     private Integer rank;
 
     @Comment("공통 종목 식별")
-    private String stockCode;
+    private String stockId;
 
-    @Comment("INTERESTSTOCK/DIVIDEND/TRADE")
+    @Comment("DIVIDEND/TRADE")
     private String stockName;
 
     @Comment("TRADE only")
-    @Enumerated(EnumType.STRING)
-    private TradeSide side;     // BUY/SELL
+    private Boolean isBuy;     // true: 매수, false: 매도
 
     @Comment("TRADE only")
     private Integer quantity;
@@ -58,16 +60,19 @@ public class Notification extends BaseEntity {
     @Comment("TRADE only")
     private Instant filledAt;
 
-    @Comment("INTERESTAREA only")
-    private String topic;
-
     @Comment("DIVIDEND only")
-    private Integer dividendAmount;
+    private Long dividendAmount;
 
     @Comment("DIVIDEND only")
     private LocalDateTime paymentDate;
 
+    @Comment("JSON 데이터")
+    @Column(columnDefinition = "JSON")
+    private String data;
+
+    @Comment("중복 방지 키")
+    @Column(length = 128)
+    private String dedupKey;
+
     public void markRead() { this.read = true; }
-
-
 }
