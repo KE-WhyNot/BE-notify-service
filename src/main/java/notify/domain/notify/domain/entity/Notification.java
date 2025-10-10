@@ -2,7 +2,6 @@ package notify.domain.notify.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import notify.global.common.BaseEntity;
 import org.hibernate.annotations.Comment;
 
 import java.time.Instant;
@@ -14,11 +13,14 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AttributeOverrides({
-    @AttributeOverride(name = "id", column = @Column(name = "notificationId")),
-    @AttributeOverride(name = "createdAt", column = @Column(name = "createdAt"))
-})
-public class Notification extends BaseEntity {
+public class Notification {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "notificationId")
+    private Long id;
+
+    @Column(name = "createdAt", nullable = false, updatable = false)
+    private Instant createdAt;
     @Column(name = "userId")
     private Long userId;
 
@@ -45,7 +47,7 @@ public class Notification extends BaseEntity {
         return readAt != null;
     }
 
-    public void markRead() { 
-        this.readAt = java.time.Instant.now(); 
+    public void markRead() {
+        this.readAt = java.time.Instant.now();
     }
 }
