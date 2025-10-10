@@ -10,7 +10,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = "notificationId")
 @Entity
 @Table(
     name = "notification_event",
@@ -25,7 +25,7 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notificationId")
-    private Long id;
+    private Long notificationId;
 
     @Column(name = "userId", nullable = false)
     private Long userId;

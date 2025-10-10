@@ -13,7 +13,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     long countByUserIdAndReadAtIsNull(Long userId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Notification n set n.readAt = CURRENT_TIMESTAMP where n.id = :id and n.userId = :userId and n.readAt is null")
+    @Query("update Notification n set n.readAt = CURRENT_TIMESTAMP where n.notificationId = :id and n.userId = :userId and n.readAt is null")
     int markRead(@Param("userId") Long userId, @Param("id") Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

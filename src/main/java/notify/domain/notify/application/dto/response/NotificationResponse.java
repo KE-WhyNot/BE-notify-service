@@ -9,18 +9,21 @@ import java.time.Instant;
 @Getter
 @AllArgsConstructor
 public class NotificationResponse {
-    private Long id;
+    private Long notificationId;
+    private Long userId;
     private String type;
     private String title;
     private String message;
     private String data;
+    private String dedupKey;
     private Instant createdAt;
+    private Instant readAt;
     private boolean read;
 
     public static NotificationResponse from(Notification n) {
         return new NotificationResponse(
-            n.getId(), n.getType().name(), n.getTitle(), n.getMessage(),
-            n.getData(), n.getCreatedAt(), n.isRead()
+            n.getNotificationId(), n.getUserId(), n.getType().name(), n.getTitle(), n.getMessage(),
+            n.getData(), n.getDedupKey(), n.getCreatedAt(), n.getReadAt(), n.isRead()
         );
     }
 }
