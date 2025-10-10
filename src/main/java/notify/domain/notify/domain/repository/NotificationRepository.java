@@ -10,15 +10,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    Page<Notification> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
-    long countByUserIdAndReadIsFalse(String userId);
+    Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    long countByUserIdAndReadIsFalse(Long userId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Notification n set n.read = true where n.id = :id and n.userId = :userId and n.read = false")
-    int markRead(@Param("userId") String userId, @Param("id") Long id);
+    int markRead(@Param("userId") Long userId, @Param("id") Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Notification n set n.read = true where n.userId = :userId and n.read = false")
-    int markAllRead(@Param("userId") String userId);
+    int markAllRead(@Param("userId") Long userId);
 
 }

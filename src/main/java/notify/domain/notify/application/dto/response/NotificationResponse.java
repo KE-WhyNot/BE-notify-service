@@ -2,7 +2,6 @@ package notify.domain.notify.application.dto.response;
 
 import notify.domain.notify.domain.entity.Notification;
 import notify.domain.notify.domain.entity.NotificationType;
-import notify.domain.notify.domain.entity.TradeSide;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -10,18 +9,20 @@ import java.time.LocalDateTime;
 public record NotificationResponse(
         Long notificationId,
         NotificationType type,
+        String title,
+        String message,
         Integer rank,
-        String stockCode,
+        String stockId,
         String stockName,
-        TradeSide side,
+        Boolean isBuy,
         Integer quantity,
         Long price,
         String orderId,
         Instant filledAt,
-        Integer dividendAmount,
+        Long dividendAmount,
         LocalDateTime paymentDate,
-        String topic,
-        String message,
+        String data,
+        String dedupKey,
         Instant createdAt,
         boolean read
 ) {
@@ -29,18 +30,20 @@ public record NotificationResponse(
         return new NotificationResponse(
                 n.getId(),
                 n.getType(),
+                n.getTitle(),
+                n.getMessage(),
                 n.getRank(),
-                n.getStockCode(),
+                n.getStockId(),
                 n.getStockName(),
-                n.getSide(),
+                n.getIsBuy(),
                 n.getQuantity(),
                 n.getPrice(),
                 n.getOrderId(),
                 n.getFilledAt(),
                 n.getDividendAmount(),
                 n.getPaymentDate(),
-                n.getTopic(),
-                n.getMessage(),
+                n.getData(),
+                n.getDedupKey(),
                 n.getCreatedAt(),
                 n.isRead()
         );

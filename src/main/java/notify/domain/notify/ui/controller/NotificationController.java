@@ -23,7 +23,8 @@ public class NotificationController implements BaseApi {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        NotificationListResponse body = notificationUseCase.listAll(userId, page, size);
+        Long userIdLong = Long.parseLong(userId);
+        NotificationListResponse body = notificationUseCase.listAll(userIdLong, page, size);
         return BaseResponse.success(OK, body).getBody();
     }
 
@@ -33,7 +34,8 @@ public class NotificationController implements BaseApi {
             @RequestHeader("X-User-Id") String userId,
             @PathVariable Long notificationId
     ) {
-        notificationUseCase.markRead(userId, notificationId);
+        Long userIdLong = Long.parseLong(userId);
+        notificationUseCase.markRead(userIdLong, notificationId);
         return BaseResponse.success(OK).getBody();
     }
 
@@ -42,7 +44,8 @@ public class NotificationController implements BaseApi {
     public BaseResponse<Integer> markAllRead(
             @RequestHeader("X-User-Id") String userId
     ) {
-        int updated = notificationUseCase.markAllRead(userId);
+        Long userIdLong = Long.parseLong(userId);
+        int updated = notificationUseCase.markAllRead(userIdLong);
         return BaseResponse.success(OK, updated).getBody();
     }
 }
