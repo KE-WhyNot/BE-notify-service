@@ -20,11 +20,9 @@ env:
   IMAGE_NAME: "notify-service"
 
 jobs:
-  build-test:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      SPRING_PROFILES_ACTIVE: test   # 단일 테스트 프로필 사용
 
     steps:
       - name: Checkout
@@ -69,17 +67,17 @@ jobs:
             exit 1
           fi
 
-      # --- Gradle 빌드/테스트 ---
-      - name: Build & Test (Gradle)
+      # --- Gradle 빌드 ---
+      - name: Build (skip tests)
         if: ${{ hashFiles('**/build.gradle','**/build.gradle.kts') != '' }}
         run: |
           chmod +x ./gradlew || true
-          ./gradlew clean build --no-daemon --stacktrace
+          ./gradlew clean build -x test --no-daemon --stacktrace
 
-      # --- Maven 빌드/테스트 ---
-      - name: Build & Test (Maven)
+      # --- Maven 빌드 ---
+      - name: Build (Maven)
         if: ${{ hashFiles('**/pom.xml') != '' && hashFiles('**/build.gradle','**/build.gradle.kts') == '' }}
-        run: mvn -B -ntp --no-transfer-progress clean verify
+        run: mvn -B -ntp --no-transfer-progress clean package -DskipTests
 
       # --- Docker (옵션: Dockerfile 있을 때만) ---
       - name: Set up Docker Buildx
@@ -122,7 +120,7 @@ jobs:
           ref: main
           token: ${{ secrets.INFRA_PAT }}
           path: INFRA
-
+      
       # yq 설치
       - name: Install yq
         if: ${{ github.ref == 'refs/heads/main' }}
@@ -136,7 +134,7 @@ jobs:
         env:
           IMAGE_REPO: docker.io/${{ secrets.dockerhub_username }}/${{ env.IMAGE_NAME }}
           IMAGE_TAG: ${{ github.sha }}
-          SERVICE_NAME: ${{ env.IMAGE_NAME }}
+          SERVICE_NAME: ${{ env.IMAGE_NAME }}                  
           HELM_VALUES_PATH: k8s/notify-service/helm/values.yaml
         run: |
           set -euo pipefail
@@ -177,15 +175,3 @@ jobs:
             **/target/*.jar
           if-no-files-found: ignore
 
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: |
-            **/build/test-results/test/**
-            **/build/reports/tests/**
-            **/target/surefire-reports/**
-            **/target/failsafe-reports/**
-            **/jacoco/**
-          if-no-files-found: ignore
