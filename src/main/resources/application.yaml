@@ -43,3 +43,18 @@ app:
     # 컨슈머 병렬성 (Listener Container 동시성)
     consumer:
       concurrency: 2
+
+# ─────────────────────────────────────────────
+# Swagger/OpenAPI 설정
+# ─────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    config-url: /v3/api-docs/swagger-config
+    url: https://notify.youth-fi.com/v3/api-docs
+  show-actuator: true
