@@ -1,4 +1,47 @@
-/.idea/
+# --- OS ---
+.DS_Store
+
+# --- IDE ---
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+
+# --- Gradle ---
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# --- Build outputs ---
 /build/
-/src/main/resources/secret/
-/.gradle/
+**/build/
+out/
+**/out/
+bin/
+**/bin/
+
+# --- Logs ---
+*.log
+
+# --- Tools (STS/NetBeans) ---
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# --- App-specific secrets / env ---
+src/main/resources/secret/
+src/main/resources/application-dev.yaml
+# 샘플은 추적 (있다면)
+!src/main/resources/application-dev-example.yaml
+
+# --- Misc ---
+HELP.md
