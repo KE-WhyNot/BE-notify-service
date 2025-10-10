@@ -1,9 +1,6 @@
 package notify.domain.notify.domain.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import lombok.*;
 import notify.global.common.BaseEntity;
 import org.hibernate.annotations.Comment;
@@ -12,67 +9,43 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "notification_event")
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AttributeOverrides({
+    @AttributeOverride(name = "id", column = @Column(name = "notificationId")),
+    @AttributeOverride(name = "createdAt", column = @Column(name = "createdAt"))
+})
 public class Notification extends BaseEntity {
-    @Column(nullable = false)
+    @Column(name = "userId")
     private Long userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(name = "type", nullable = false)
     private NotificationType type;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "title", nullable = false, length = 200)
     private String title;
 
-    @Column(nullable = false, length = 500)
+    @Column(name = "message", columnDefinition = "TEXT")
     private String message;
 
-    @Column(name = "read_flag", nullable = false)
-    @Builder.Default
-    private boolean read = false;
+    @Column(name = "readAt")
+    private java.time.Instant readAt;
 
-    // 타입별 확장 필드
-    @Column(name = "rank_no")
-    @Comment("RANKING")
-    private Integer rank;
-
-    @Comment("공통 종목 식별")
-    private String stockId;
-
-    @Comment("DIVIDEND/TRADE")
-    private String stockName;
-
-    @Comment("TRADE only")
-    private Boolean isBuy;     // true: 매수, false: 매도
-
-    @Comment("TRADE only")
-    private Integer quantity;
-
-    @Comment("TRADE only (체결가)")
-    private Long price;
-
-    @Comment("TRADE only")
-    private String orderId;
-
-    @Comment("TRADE only")
-    private Instant filledAt;
-
-    @Comment("DIVIDEND only")
-    private Long dividendAmount;
-
-    @Comment("DIVIDEND only")
-    private LocalDateTime paymentDate;
-
-    @Comment("JSON 데이터")
-    @Column(columnDefinition = "JSON")
+    @Column(name = "data", columnDefinition = "JSON")
     private String data;
 
-    @Comment("중복 방지 키")
-    @Column(length = 128)
+    @Column(name = "dedupKey", length = 128)
     private String dedupKey;
 
-    public void markRead() { this.read = true; }
+    public boolean isRead() {
+        return readAt != null;
+    }
+
+    public void markRead() { 
+        this.readAt = java.time.Instant.now(); 
+    }
 }
