@@ -17,7 +17,7 @@ public class NotificationQueryService {
         var mapped = repo
                 .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
                 .map(NotificationResponse::from);
-        long unread = repo.countByUserIdAndReadIsFalse(userId);
+        long unread = repo.countByUserIdAndReadAtIsNull(userId);
         return NotificationListResponse.of(mapped.getContent(), mapped.isLast(), unread);
     }
 }
