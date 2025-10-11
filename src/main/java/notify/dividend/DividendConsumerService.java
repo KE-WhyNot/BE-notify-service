@@ -20,6 +20,20 @@ public class DividendConsumerService {
     private final ObjectMapper om = new ObjectMapper();
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
+    private static LocalDate parseDebeziumDate(JsonNode n) {
+        if (n == null || n.isMissingNode() || n.isNull()) return null;
+        // 숫자 형태 (에포크 일수)
+        if (n.isNumber() || n.asText().matches("^\\d+$")) {
+            return LocalDate.ofEpochDay(n.asLong());
+        }
+        // 문자열 날짜 형태 'YYYY-MM-DD'
+        String s = n.asText();
+        if (s.length() >= 10) {
+            return LocalDate.parse(s.substring(0, 10));
+        }
+        return null;
+    }
+
     @KafkaListener(topics = "finance.finance.dividendInfo", containerFactory = "kafkaListenerContainerFactory")
     public void onDividend(String value, Acknowledgment ack) {
         try {
@@ -30,51 +44,41 @@ public class DividendConsumerService {
             JsonNode a = root.path("payload").path("after");
             if (a.isMissingNode() || a.isNull()) { ack.acknowledge(); return; }
 
-            Long userId     = a.path("userId").isNull() ? null : a.path("userId").asLong();
+            Long userId = a.path("userId").isNull() ? null : a.path("userId").asLong();
             if (userId == null || userId <= 0) { ack.acknowledge(); return; }
 
             long dividendId = a.path("dividendId").asLong();
-            String stockId  = a.path("stockId").asText(null);
-            String recordDate = a.path("recordDate").asText(null);
-            String amount   = a.path("cashDividend").isNull() ? null : a.path("cashDividend").asText(); // 주당 배당
-            String rate     = a.path("dividendRate").isNull() ? null : a.path("dividendRate").asText();
-            String payDate  = a.path("dividendDate").isNull() ? null : a.path("dividendDate").asText(); // 'YYYY-MM-DD'
+            String stockId = a.path("stockId").asText(null);
+            Long sectorId = a.path("sectorId").isNull() ? null : a.path("sectorId").asLong();
+            String amount = a.path("cashDividend").isNull() ? null : a.path("cashDividend").asText();
+            String rate = a.path("dividendRate").isNull() ? null : a.path("dividendRate").asText();
 
-            // 지급일=오늘(KST)만 알림 생성
-            if (payDate == null || !LocalDate.parse(payDate).isEqual(LocalDate.now(KST))) {
-                ack.acknowledge();
-                return;
-            }
+            // 날짜 파싱
+            LocalDate recordDate = parseDebeziumDate(a.path("recordDate"));
+            LocalDate dividendDate = parseDebeziumDate(a.path("dividendDate"));
 
-            // Title/Message (English)
-            String title = "Dividend Paid: " + (stockId != null ? stockId : "N/A");
-            String message = String.format("%s  %s  dividend  %s per share",
-                    payDate != null ? payDate : "",
-                    stockId != null ? stockId : "N/A",
-                    amount != null ? amount : "0");
-
-            // 멱등키: div:<dividendId>:<userId>
+            // notify.dividend_notice에 UPSERT (지급일과 관계없이 모든 데이터 저장)
             int n = jdbc.update("""
-                INSERT IGNORE INTO notify.notification_event
-                  (userId, type, title, message, data, dedupKey, createdAt)
-                VALUES
-                  (?, 'DIVIDEND', ?, ?,
-                   JSON_OBJECT(
-                     'dividendId', ?,
-                     'stockId', ?,
-                     'recordDate', ?,
-                     'dividendDate', ?,
-                     'cashDividend', ?,
-                     'dividendRate', ?
-                   ),
-                   CONCAT('div:', ?, ':', ?),
-                   NOW())
+                INSERT INTO notify.dividend_notice
+                  (dividendId, userId, stockId, sectorId, recordDate, cashDividend, dividendRate, dividendDate, createdAt)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                ON DUPLICATE KEY UPDATE
+                  stockId=VALUES(stockId),
+                  sectorId=VALUES(sectorId),
+                  recordDate=VALUES(recordDate),
+                  cashDividend=VALUES(cashDividend),
+                  dividendRate=VALUES(dividendRate),
+                  dividendDate=VALUES(dividendDate),
+                  updatedAt=CURRENT_TIMESTAMP
             """,
-            userId, title, message,
-            dividendId, stockId, recordDate, payDate, amount, rate,
-            dividendId, userId);
+            dividendId, userId, stockId, sectorId,
+            java.sql.Date.valueOf(recordDate),   // recordDate
+            amount,                              // cashDividend
+            rate,                                // dividendRate
+            java.sql.Date.valueOf(dividendDate)  // dividendDate
+            );
 
-            log.info("DIVIDEND notify inserted userId={} dividendId={} rows={}", userId, dividendId, n);
+            log.info("DIVIDEND notice upserted userId={} dividendId={} rows={}", userId, dividendId, n);
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Dividend consume failed: {}", e.toString(), e);
