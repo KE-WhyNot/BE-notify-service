@@ -15,7 +15,7 @@ public class DividendNotifyScheduler {
     private final JdbcTemplate jdbc;
 
     /** 매일 09:00 KST, 지급일=오늘인 건을 알림 생성(이미 있으면 IGNORE) */
-    @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
     public void publishTodayDividend() {
         int rows = jdbc.update("""
             INSERT IGNORE INTO notify.notification_event
