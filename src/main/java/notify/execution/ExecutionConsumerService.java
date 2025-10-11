@@ -38,12 +38,11 @@ public class ExecutionConsumerService {
             String totalStr   = asTextOrNull(a, "totalPrice");
             String tradeAtStr = asTextOrNull(a, "tradeAt"); // 'YYYY-MM-DD HH:mm:ss'
 
-            // Title/Message (English)
-            String side   = isBuy == 1 ? "BUY" : "SELL";
-            String title  = (isBuy == 1 ? "Buy Filled: " : "Sell Filled: ") + safe(stockId, "N/A") + " x" + qty;
-            // "YYYY-MM-DD HH:mm  AAPL  BUY  3 shares @ 149.50"
-            String message = String.format("%s  %s  %s  %d shares @ %s",
-                    tradeAtStr != null ? left(tradeAtStr, 16) : "",
+            // Title/Message (Korean)
+            String side   = isBuy == 1 ? "매수" : "매도";
+            String title  = (isBuy == 1 ? "매수 체결: " : "매도 체결: ") + safe(stockId, "N/A") + " x" + qty;
+            // "YYYY-MM-DD HH:mm  AAPL  매수  3주 @ 149.50"
+            String message = String.format("%s  %s  %d주 @ %s",
                     safe(stockId, "N/A"),
                     side,
                     qty,
