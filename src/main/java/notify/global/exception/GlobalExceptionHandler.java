@@ -10,13 +10,19 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.net.BindException;
+import org.springframework.validation.BindException;
 
 
 @Slf4j
 @RestControllerAdvice
 @Hidden
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound(Exception e, HttpServletRequest req) {
+        log.debug("Static resource not found [{} {}]: {}", req.getMethod(), req.getRequestURI(), e.getMessage());
+        return ResponseEntity.notFound().build();
+    }
 
     @ExceptionHandler(RestApiException.class)
     public ResponseEntity<BaseResponse<Void>> handleRestApi(RestApiException e) {
