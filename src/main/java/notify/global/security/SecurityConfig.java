@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler())
                 )
-                .addFilterBefore(new UserIdHeaderFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new UserIdHeaderFilter(authenticationEntryPoint()), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -90,6 +90,12 @@ public class SecurityConfig {
         private static final String HDR_USER_ID = "X-User-Id";
         private static final String HDR_REQ_ID  = "X-Request-Id";
 
+        private final AuthenticationEntryPoint entryPoint;
+
+        UserIdHeaderFilter(AuthenticationEntryPoint entryPoint) {
+            this.entryPoint = entryPoint;
+        }
+
         @Override
         protected boolean shouldNotFilter(HttpServletRequest request) {
             // CORS 프리플라이트는 스킵
@@ -117,16 +123,22 @@ public class SecurityConfig {
                     method, uri, client, safe(userIdHeader), traceId);
 
             try {
-                // 인증 컨텍스트 세팅
+                // /api/** 에서는 X-User-Id 필수
+                boolean apiPath = uri.startsWith("/api/");
+
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
                     if (userIdHeader != null && !userIdHeader.isBlank()) {
                         var auth = new UsernamePasswordAuthenticationToken(
-                                userIdHeader, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            userIdHeader, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
                         );
                         SecurityContextHolder.getContext().setAuthentication(auth);
                         log.debug("[SEC] Authenticated principal={} traceId={}", userIdHeader, traceId);
+                    } else if (apiPath) {
+                        // 인증이 필요한 경로인데 헤더가 없으면 401
+                        entryPoint.commence(req, res, null);
+                        return;
                     } else {
-                        log.debug("[SEC] No X-User-Id header. Proceeding as anonymous. traceId={}", traceId);
+                        log.debug("[SEC] No X-User-Id header (non-API path). Proceeding anonymous. traceId={}", traceId);
                     }
                 }
 
