@@ -13,26 +13,32 @@ import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
-    
+
     @Value("${server.port:8083}")
     private String serverPort;
-    
+
     @Value("${spring.profiles.active:local}")
     private String activeProfile;
-    
+
     @Bean
     public OpenAPI openAPI() {
+        // ✅ Bearer 인증 스킴 (JWT)
+        SecurityScheme bearerAuth = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .name("Authorization")
+                .description("로그인 시 받은 JWT를 입력하세요. 예: Bearer eyJhbGciOiJI...");
+
         OpenAPI openAPI = new OpenAPI()
-                .components(new Components()
-                        .addSecuritySchemes("UserIdHeader",
-                                new SecurityScheme().type(SecurityScheme.Type.APIKEY)
-                                        .in(SecurityScheme.In.HEADER).name("X-User-Id")
-                                        .description("게이트웨이가 검증 후 전달한 사용자 ID")))
-                .addSecurityItem(new SecurityRequirement()
-                        .addList("GatewaySignature").addList("UserIdHeader"))
-                .info(new Info().title("Notify API").version("v1")
-                        .description("알림 생성(내부) + 알림함 조회/읽음(사용자)"));
-        
+                .components(new Components().addSecuritySchemes("BearerAuth", bearerAuth))
+                .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
+                .info(new Info()
+                        .title("Notify API")
+                        .version("v1")
+                        .description("알림 생성(내부) + 알림함 조회/읽음(사용자)")
+                );
+
         // 환경별 서버 설정
         if ("prod".equals(activeProfile)) {
             openAPI.servers(List.of(
@@ -43,15 +49,12 @@ public class SwaggerConfig {
                     new Server().url("https://notify.youth-fi.com").description("Development Server"),
                     new Server().url("http://localhost:" + serverPort).description("Local Server")
             ));
-        } else {
-            // local 또는 기본값
+        } else { // local
             openAPI.servers(List.of(
-                    new Server().url("https://notify.youth-fi.com").description("Production Server"),
                     new Server().url("http://localhost:" + serverPort).description("Local Server")
             ));
         }
-        
+
         return openAPI;
     }
 }
-
