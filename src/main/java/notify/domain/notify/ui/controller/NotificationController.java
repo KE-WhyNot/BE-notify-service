@@ -28,7 +28,7 @@ public class NotificationController implements BaseApi {
             Principal principal,
             @PageableDefault(size = 20) Pageable pageable) {
 
-        Long userId = Long.parseLong(principal.getName()); // ← 여기서 가져옴
+        String userId = principal.getName(); // ← 여기서 가져옴
 
         Pageable fixedPageable = PageRequest.of(
                 pageable.getPageNumber(),
@@ -42,21 +42,21 @@ public class NotificationController implements BaseApi {
 
     @GetMapping("/unread-count")
     public BaseResponse<Map<String, Long>> unreadCount(Principal principal) {
-        Long userId = Long.parseLong(principal.getName()); // ← 여기서 가져옴
+        String userId = principal.getName(); // ← 여기서 가져옴
         Map<String, Long> body = Map.of("count", useCase.unreadCount(userId));
         return BaseResponse.success(OK, body).getBody();
     }
 
     @PostMapping("/{id}/read")
     public BaseResponse<Void> markRead(Principal principal, @PathVariable Long id) {
-        Long userId = Long.parseLong(principal.getName()); // ← 여기서 가져옴
+        String userId = principal.getName(); // ← 여기서 가져옴
         useCase.markRead(userId, id);
         return BaseResponse.success(OK).getBody();
     }
 
     @PostMapping("/read-all")
     public BaseResponse<Map<String, Integer>> markAllRead(Principal principal) {
-        Long userId = Long.parseLong(principal.getName()); // ← 여기서 가져옴
+        String userId = principal.getName(); // ← 여기서 가져옴
         Map<String, Integer> body = Map.of("updated", useCase.markAllRead(userId));
         return BaseResponse.success(OK, body).getBody();
     }

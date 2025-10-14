@@ -17,23 +17,23 @@ public class NotificationUseCase {
     private final NotificationQueryService queryService;
 
     @Transactional(readOnly = true)
-    public Page<NotificationResponse> list(Long userId, Pageable pageable) {
-        if (userId == null || userId <= 0) {
+    public Page<NotificationResponse> list(String userId, Pageable pageable) {
+        if (userId == null || userId.trim().isEmpty()) {
             throw new RestApiException(NotificationErrorCode.INVALID_USER_ID);
         }
         return queryService.list(userId, pageable);
     }
 
     @Transactional(readOnly = true)
-    public long unreadCount(Long userId) {
-        if (userId == null || userId <= 0) {
+    public long unreadCount(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
             throw new RestApiException(NotificationErrorCode.INVALID_USER_ID);
         }
         return queryService.unreadCount(userId);
     }
 
-    public void markRead(Long userId, Long id) {
-        if (userId == null || userId <= 0) {
+    public void markRead(String userId, Long id) {
+        if (userId == null || userId.trim().isEmpty()) {
             throw new RestApiException(NotificationErrorCode.INVALID_USER_ID);
         }
         int updated = queryService.markRead(userId, id);
@@ -42,8 +42,8 @@ public class NotificationUseCase {
         }
     }
 
-    public int markAllRead(Long userId) {
-        if (userId == null || userId <= 0) {
+    public int markAllRead(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
             throw new RestApiException(NotificationErrorCode.INVALID_USER_ID);
         }
         return queryService.markAllRead(userId);

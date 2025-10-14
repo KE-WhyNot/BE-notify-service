@@ -14,23 +14,23 @@ public class NotificationQueryService {
     private final NotificationRepository repo;
 
     @Transactional(readOnly = true)
-    public Page<NotificationResponse> list(Long userId, Pageable pageable) {
+    public Page<NotificationResponse> list(String userId, Pageable pageable) {
         return repo.findByUserIdOrderByCreatedAtDesc(userId, pageable)
                    .map(NotificationResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public long unreadCount(Long userId) {
+    public long unreadCount(String userId) {
         return repo.countByUserIdAndReadAtIsNull(userId);
     }
 
     @Transactional
-    public int markRead(Long userId, Long id) { 
+    public int markRead(String userId, Long id) { 
         return repo.markRead(userId, id); 
     }
 
     @Transactional
-    public int markAllRead(Long userId) { 
+    public int markAllRead(String userId) { 
         return repo.markAllRead(userId); 
     }
 }

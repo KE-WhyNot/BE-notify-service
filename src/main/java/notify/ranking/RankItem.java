@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RankItem {
-    private Long userId;
+    private String userId;
     private int rank;
     private double profitRate;
 }
