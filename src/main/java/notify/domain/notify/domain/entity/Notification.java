@@ -28,7 +28,7 @@ public class Notification {
     private Long notificationId;
 
     @Column(name = "userId", nullable = false)
-    private Long userId;
+    private String userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 32)

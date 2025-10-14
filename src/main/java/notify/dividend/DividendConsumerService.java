@@ -44,8 +44,8 @@ public class DividendConsumerService {
             JsonNode a = root.path("payload").path("after");
             if (a.isMissingNode() || a.isNull()) { ack.acknowledge(); return; }
 
-            Long userId = a.path("userId").isNull() ? null : a.path("userId").asLong();
-            if (userId == null || userId <= 0) { ack.acknowledge(); return; }
+            String userId = a.path("userId").isNull() ? null : a.path("userId").asText();
+            if (userId == null || userId.trim().isEmpty()) { ack.acknowledge(); return; }
 
             long dividendId = a.path("dividendId").asLong();
             String stockId = a.path("stockId").asText(null);

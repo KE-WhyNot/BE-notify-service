@@ -27,8 +27,8 @@ public class ExecutionConsumerService {
             JsonNode a = root.path("payload").path("after");
             if (a.isMissingNode() || a.isNull()) { ack.acknowledge(); return; }
 
-            Long userId = asLongOrNull(a, "userId");
-            if (userId == null || userId <= 0) { ack.acknowledge(); return; }
+            String userId = asTextOrNull(a, "userId");
+            if (userId == null || userId.trim().isEmpty()) { ack.acknowledge(); return; }
 
             long executionId  = a.path("executionId").asLong();
             String stockId    = asTextOrNull(a, "stockId");
@@ -75,23 +75,12 @@ public class ExecutionConsumerService {
 
 
     // Helper methods
-    private Long asLongOrNull(JsonNode node, String field) {
-        JsonNode fieldNode = node.path(field);
-        return fieldNode.isNull() || fieldNode.isMissingNode() ? null : fieldNode.asLong();
-    }
-
     private String asTextOrNull(JsonNode node, String field) {
         JsonNode fieldNode = node.path(field);
         return fieldNode.isNull() || fieldNode.isMissingNode() ? null : fieldNode.asText();
     }
 
-
     private String safe(String str, String defaultValue) {
         return str != null && !str.trim().isEmpty() ? str : defaultValue;
-    }
-
-    private String left(String str, int len) {
-        if (str == null || str.length() <= len) return str;
-        return str.substring(0, len);
     }
 }
