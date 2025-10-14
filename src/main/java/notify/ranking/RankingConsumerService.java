@@ -28,15 +28,15 @@ public class RankingConsumerService {
             log.info("📩 Received Top10 ranking: {}", top10);
 
             for (RankItem item : top10) {
-                Long userId = item.getUserId();
+                String userId = item.getUserId();
                 int rank = item.getRank();
                 double profitRate = item.getProfitRate();
 
                 String title = String.format("🎉 실시간 수익률 랭킹 %d위 진입!", rank);
                 String msg = String.format("현재 수익률: %.2f%%", profitRate);
-                String data = String.format("{\"userId\":%d,\"rank\":%d,\"profitRate\":%.2f}",
+                String data = String.format("{\"userId\":\"%s\",\"rank\":%d,\"profitRate\":%.2f}",
                         userId, rank, profitRate);
-                String dedupKey = String.format("rank:%d:%d", userId, rank);
+                String dedupKey = String.format("rank:%s:%d", userId, rank);
 
                 // SQL INSERT
                 int n = jdbc.update("""
