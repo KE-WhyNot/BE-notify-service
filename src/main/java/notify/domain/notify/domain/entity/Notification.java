@@ -16,23 +16,23 @@ import java.time.Instant;
     name = "notification_event",
     schema = "notify",
     indexes = {
-        @Index(name = "idx_notification_event_user_createdAt", columnList = "userId, createdAt"),
-        @Index(name = "uq_notification_event_dedupKey", columnList = "dedupKey", unique = true)
+        @Index(name = "idx_notification_event_user_createdAt", columnList = "user_id, created_at"),
+        @Index(name = "uq_notification_event_dedupKey", columnList = "dedup_key", unique = true)
     }
 )
 public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notificationId")
+    @Column(name = "notification_id")
     private Long notificationId;
 
-    @Column(name = "userId", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 32)
-    private NotificationType type;  // e.g. EXECUTION, DIVIDEND
+    private NotificationType type;  // e.g. EXECUTION, RANKING
 
     @Column(name = "title", nullable = false, length = 200)
     private String title;
@@ -43,13 +43,13 @@ public class Notification {
     @Column(name = "data", columnDefinition = "JSON")
     private String data;
 
-    @Column(name = "dedupKey", length = 128, unique = true)
+    @Column(name = "dedup_key", length = 128, unique = true)
     private String dedupKey;
 
-    @Column(name = "createdAt", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "readAt")
+    @Column(name = "read_at")
     private Instant readAt;
 
     public boolean isRead() { return readAt != null; }
