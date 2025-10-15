@@ -19,12 +19,12 @@ public class RankingController {
     @GetMapping("/top10")
     public List<RankingResponse> top10() {
         return jdbc.query("""
-                SELECT user_id, rank, profit_rate
+                SELECT user_id, rank_no, profit_rate
                 FROM notify.ranking_top10
-                ORDER BY rank ASC
+                ORDER BY rank_no ASC
             """, (rs, i) -> new RankingResponse(
                     rs.getString("user_id"),
-                    rs.getInt("rank"),
+                    rs.getInt("rank_no"),
                     rs.getDouble("profit_rate")
             ));
     }
@@ -33,12 +33,12 @@ public class RankingController {
     @GetMapping("/myrank")
     public MyRankingResponse myRank(@RequestHeader("X-User-Id") String userId) {
         List<RankingResponse> rows = jdbc.query("""
-                SELECT user_id, rank, profit_rate
+                SELECT user_id, rank_no, profit_rate
                 FROM notify.ranking_top10
                 WHERE user_id = ?
             """, (rs, i) -> new RankingResponse(
                     rs.getString("user_id"),
-                    rs.getInt("rank"),
+                    rs.getInt("rank_no"),
                     rs.getDouble("profit_rate")
             ), userId);
 
@@ -46,6 +46,6 @@ public class RankingController {
             return new MyRankingResponse(false, null, null);
         }
         var r = rows.get(0);
-        return new MyRankingResponse(true, r.rank(), r.profitRate());
+        return new MyRankingResponse(true, r.rankNo(), r.profitRate());
     }
 }

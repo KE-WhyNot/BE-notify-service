@@ -44,10 +44,10 @@ public class RankingConsumerService {
 
             // 업서트(존재하면 업데이트, 없으면 인서트)
             jdbc.batchUpdate("""
-                    INSERT INTO notify.ranking_top10 (user_id, rank, profit_rate, updated_at)
+                    INSERT INTO notify.ranking_top10 (user_id, rank_no, profit_rate, updated_at)
                     VALUES (?, ?, ?, NOW())
                     ON DUPLICATE KEY UPDATE
-                      rank = VALUES(rank),
+                      rank_no = VALUES(rank_no),
                       profit_rate = VALUES(profit_rate),
                       updated_at = NOW()
                 """,
@@ -55,7 +55,7 @@ public class RankingConsumerService {
                 top10.size(),
                 (ps, item) -> {
                     ps.setString(1, item.getUserId());
-                    ps.setInt(2, item.getRank());
+                    ps.setInt(2, item.getRankNo());
                     ps.setDouble(3, item.getProfitRate());
                 }
             );
@@ -78,14 +78,14 @@ public class RankingConsumerService {
             //  순위 알림
             for (RankItem item : top10) {
                 String userId = item.getUserId();
-                int rank = item.getRank();
+                int rankNo = item.getRankNo();
                 double profitRate = item.getProfitRate();
 
-                String title = String.format("🎉 실시간 수익률 랭킹 %d위 진입!", rank);
+                String title = String.format("🎉 실시간 수익률 랭킹 %d위 진입!", rankNo);
                 String msg = String.format("현재 수익률: %.2f%%", profitRate);
-                String data = String.format("{\"user_id\":\"%s\",\"rank\":%d,\"profit_rate\":%.2f}",
-                        userId, rank, profitRate);
-                String dedupKey = String.format("rank:%s:%d", userId, rank);
+                String data = String.format("{\"user_id\":\"%s\",\"rank_no\":%d,\"profit_rate\":%.2f}",
+                        userId, rankNo, profitRate);
+                String dedupKey = String.format("rank:%s:%d", userId, rankNo);
 
                 jdbc.update("""
                     INSERT IGNORE INTO notify.notification_event

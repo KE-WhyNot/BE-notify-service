@@ -14,7 +14,8 @@ public class RankItem {
     @JsonProperty("user_id")
     private String userId;
     
-    private int rank;
+    @JsonProperty("rank_no")
+    private int rankNo;
     
     @JsonProperty("profit_rate")
     private double profitRate;
