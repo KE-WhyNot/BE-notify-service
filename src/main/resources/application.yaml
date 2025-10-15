@@ -42,7 +42,6 @@ app:
     topic:
       userstock: finance.finance.userstock
       execution: finance.finance.execution
-      dividend: finance.finance.dividendInfo
       ranking-output: notify.ranking.top10
 
     # 컨슈머 병렬성 (Listener Container 동시성)

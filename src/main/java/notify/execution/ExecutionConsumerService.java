@@ -27,16 +27,16 @@ public class ExecutionConsumerService {
             JsonNode a = root.path("payload").path("after");
             if (a.isMissingNode() || a.isNull()) { ack.acknowledge(); return; }
 
-            String userId = asTextOrNull(a, "userId");
+            String userId = asTextOrNull(a, "user_id");
             if (userId == null || userId.trim().isEmpty()) { ack.acknowledge(); return; }
 
-            long executionId  = a.path("executionId").asLong();
-            String stockId    = asTextOrNull(a, "stockId");
-            int isBuy         = a.path("isBuy").asInt(0); // 1=매수, 0=매도
+            long executionId  = a.path("execution_id").asLong();
+            String stockId    = asTextOrNull(a, "stock_id");
+            int isBuy         = a.path("is_buy").asInt(0); // 1=매수, 0=매도
             long qty          = a.path("quantity").asLong(0);
             String priceStr   = asTextOrNull(a, "price");
-            String totalStr   = asTextOrNull(a, "totalPrice");
-            String tradeAtStr = asTextOrNull(a, "tradeAt"); // 'YYYY-MM-DD HH:mm:ss'
+            String totalStr   = asTextOrNull(a, "total_price");
+            String tradeAtStr = asTextOrNull(a, "trade_at"); // 'YYYY-MM-DD HH:mm:ss'
 
             // Title/Message (Korean)
             String side   = isBuy == 1 ? "매수" : "매도";
@@ -50,12 +50,12 @@ public class ExecutionConsumerService {
 
             int n = jdbc.update("""
                 INSERT IGNORE INTO notify.notification_event
-                  (userId, type, title, message, data, dedupKey, createdAt)
+                  (user_id, type, title, message, data, dedup_key, created_at)
                 VALUES
                   (?, 'EXECUTION', ?, ?,
                    JSON_OBJECT(
-                     'executionId', ?, 'stockId', ?, 'isBuy', ?,
-                     'qty', ?, 'price', ?, 'totalPrice', ?, 'tradeAt', ?
+                     'execution_id', ?, 'stock_id', ?, 'is_buy', ?,
+                     'qty', ?, 'price', ?, 'total_price', ?, 'trade_at', ?
                    ),
                    CONCAT('exec:', ?, ':', ?),
                    NOW())
