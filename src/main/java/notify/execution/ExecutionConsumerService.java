@@ -32,6 +32,7 @@ public class ExecutionConsumerService {
 
             long executionId  = a.path("execution_id").asLong();
             String stockId    = asTextOrNull(a, "stock_id");
+            String stockName  = asTextOrNull(a, "stock_name_snapshot"); // 종목명 추가
             int isBuy         = a.path("is_buy").asInt(0); // 1=매수, 0=매도
             long qty          = a.path("quantity").asLong(0);
             String priceStr   = asTextOrNull(a, "price");
@@ -40,10 +41,11 @@ public class ExecutionConsumerService {
 
             // Title/Message (Korean)
             String side   = isBuy == 1 ? "매수" : "매도";
-            String title  = (isBuy == 1 ? "매수 체결: " : "매도 체결: ") + safe(stockId, "N/A") + " x" + qty;
-            // "YYYY-MM-DD HH:mm  AAPL  매수  3주 @ 149.50"
+            String displayName = safe(stockName, safe(stockId, "N/A")); // 종목명 우선, 없으면 종목코드
+            String title  = (isBuy == 1 ? "매수 체결: " : "매도 체결: ") + displayName + " x" + qty;
+            // "매수 체결: 삼성전자 x1"
             String message = String.format("%s  %s  %d주 @ %s",
-                    safe(stockId, "N/A"),
+                    displayName,
                     side,
                     qty,
                     safe(priceStr, "0"));
@@ -54,14 +56,14 @@ public class ExecutionConsumerService {
                 VALUES
                   (?, 'EXECUTION', ?, ?,
                    JSON_OBJECT(
-                     'execution_id', ?, 'stock_id', ?, 'is_buy', ?,
+                     'execution_id', ?, 'stock_id', ?, 'stock_name', ?, 'is_buy', ?,
                      'qty', ?, 'price', ?, 'total_price', ?, 'trade_at', ?
                    ),
                    CONCAT('exec:', ?, ':', ?),
                    NOW())
             """,
             userId, title, message,
-            executionId, stockId, isBuy,
+            executionId, stockId, stockName, isBuy,
             qty, priceStr, totalStr, tradeAtStr,
             executionId, userId);
 
