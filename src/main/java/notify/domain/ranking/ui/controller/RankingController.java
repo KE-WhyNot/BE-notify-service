@@ -15,32 +15,34 @@ public class RankingController {
 
     private final JdbcTemplate jdbc;
 
-    // 전체 랭킹 조회
     @GetMapping("/top10")
     public List<RankingResponse> top10() {
         return jdbc.query("""
                 SELECT user_id, rank_no, profit_rate
-                FROM notify.ranking_top10
-                ORDER BY rank_no ASC
+                  FROM notify.ranking_top10
+                 WHERE in_top10 = 1
+                 ORDER BY rank_no ASC
+                 LIMIT 10
             """, (rs, i) -> new RankingResponse(
-                    rs.getString("user_id"),
-                    rs.getInt("rank_no"),
-                    rs.getDouble("profit_rate")
-            ));
+                rs.getString("user_id"),
+                rs.getInt("rank_no"),
+                rs.getDouble("profit_rate")
+        ));
     }
 
-    // 내 순위 조회 (Top10 내에 있으면 반환)
     @GetMapping("/myrank")
     public MyRankingResponse myRank(@RequestHeader("X-User-Id") String userId) {
         List<RankingResponse> rows = jdbc.query("""
                 SELECT user_id, rank_no, profit_rate
-                FROM notify.ranking_top10
-                WHERE user_id = ?
+                  FROM notify.ranking_top10
+                 WHERE user_id = ?
+                   AND in_top10 = 1
+                 LIMIT 1
             """, (rs, i) -> new RankingResponse(
-                    rs.getString("user_id"),
-                    rs.getInt("rank_no"),
-                    rs.getDouble("profit_rate")
-            ), userId);
+                rs.getString("user_id"),
+                rs.getInt("rank_no"),
+                rs.getDouble("profit_rate")
+        ), userId);
 
         if (rows.isEmpty()) {
             return new MyRankingResponse(false, null, null);
