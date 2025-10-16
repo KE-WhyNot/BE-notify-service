@@ -44,11 +44,11 @@ public class ExecutionConsumerService {
             String displayName = safe(stockName, safe(stockId, "N/A")); // 종목명 우선, 없으면 종목코드
             String title  = (isBuy == 1 ? "매수 체결: " : "매도 체결: ") + displayName + " x" + qty;
             // "매수 체결: 삼성전자 x1"
-            String message = String.format("%s  %s  %d주 @ %s",
+            String message = String.format("%s %d주 %s원 %s 체결됐습니다!",
                     displayName,
-                    side,
                     qty,
-                    safe(priceStr, "0"));
+                    safe(priceStr, "0"),
+                    side);
 
             int n = jdbc.update("""
                 INSERT IGNORE INTO notify.notification_event
