@@ -10,10 +10,8 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
 
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -43,7 +41,7 @@ public class RankingConsumerService {
 
             // 1) 업서트: 들어온 유저를 활성화(in_top10=1) + 갱신
             jdbc.batchUpdate("""
-                INSERT INTO notify.ranking_top10
+                INSERT INTO notify.ranking_top10_v2
                   (user_id, rank_no, profit_rate, in_top10, last_seen_at, updated_at)
                 VALUES
                   (?, ?, ?, 1, NOW(), NOW())
@@ -66,7 +64,7 @@ public class RankingConsumerService {
             String placeholders = String.join(",", incoming.stream().map(x -> "?").toList());
 
             // Top10이 적어도 1명 이상 있을 때만 수행 (빈 리스트일 땐 스냅샷 보존)
-            String sql = "UPDATE notify.ranking_top10 " +
+            String sql = "UPDATE notify.ranking_top10_v2 " +
                     "SET in_top10=0, dropped_at=IFNULL(dropped_at, NOW()), updated_at=NOW() " +
                     "WHERE in_top10=1 AND user_id NOT IN (" + placeholders + ")";
             jdbc.update(con -> {

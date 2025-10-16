@@ -19,7 +19,7 @@ public class RankingController {
     public List<RankingResponse> top10() {
         return jdbc.query("""
                 SELECT user_id, rank_no, profit_rate
-                  FROM notify.ranking_top10
+                  FROM notify.ranking_top10_v2
                  WHERE in_top10 = 1
                  ORDER BY rank_no ASC
                  LIMIT 10
@@ -34,7 +34,7 @@ public class RankingController {
     public MyRankingResponse myRank(@RequestHeader("X-User-Id") String userId) {
         List<RankingResponse> rows = jdbc.query("""
                 SELECT user_id, rank_no, profit_rate
-                  FROM notify.ranking_top10
+                  FROM notify.ranking_top10_v2
                  WHERE user_id = ?
                    AND in_top10 = 1
                  LIMIT 1
