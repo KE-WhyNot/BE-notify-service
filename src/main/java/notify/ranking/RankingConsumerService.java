@@ -10,9 +10,8 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-
 import java.util.Set;
 
 @Slf4j
@@ -23,59 +22,62 @@ public class RankingConsumerService {
     private final JdbcTemplate jdbc;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /** Kafka topic: notify.ranking.top10 */
     @KafkaListener(topics = "notify.ranking.top10", containerFactory = "kafkaListenerContainerFactory")
     @Transactional
     public void consume(String message, Acknowledgment ack) {
         try {
-            // 메시지는 [{"userId":"1","rank":3,"profitRate":21.4}, ...]
-            List<RankItem> top10 = objectMapper.readValue(message, new TypeReference<>() {});
-            log.info("📩 Received Top10 ranking: {}", top10);
+            // 0) 안전 파싱 + 필터
+            List<RankItem> raw = objectMapper.readValue(message, new TypeReference<>() {});
+            List<RankItem> top10 = raw.stream()
+                    .filter(it -> it != null
+                            && it.getUserId() != null && !it.getUserId().isBlank()
+                            && it.getRankNo() > 0
+                            && !Double.isNaN(it.getProfitRate()))
+                    .toList();
 
-            // 현재 스냅샷 읽기 (이탈자 감지)
-            List<String> currentUsers = jdbc.query(
-                    "SELECT user_id FROM notify.ranking_top10",
-                    (rs, i) -> rs.getString(1)
-            );
+            if (top10.isEmpty()) {
+                log.warn("⚠️ Empty/invalid Top10 payload. Skip patch to protect snapshot.");
+                ack.acknowledge();
+                return;
+            }
 
-            // 이번 수신 Top10의 userId
-            Set<String> incomingSet = new HashSet<>();
-            for (RankItem item : top10) incomingSet.add(item.getUserId());
-
-            // 업서트(존재하면 업데이트, 없으면 인서트)
+            // 1) 업서트 (MySQL 8.0.20+ 권장 문법: AS new 사용)
             jdbc.batchUpdate("""
-                    INSERT INTO notify.ranking_top10 (user_id, rank_no, profit_rate, updated_at)
-                    VALUES (?, ?, ?, NOW())
-                    ON DUPLICATE KEY UPDATE
-                      rank_no = VALUES(rank_no),
-                      profit_rate = VALUES(profit_rate),
-                      updated_at = NOW()
-                """,
-                    top10,
-                    top10.size(),
+                INSERT INTO notify.ranking_top10_v2
+                  (user_id, rank_no, profit_rate, in_top10, last_seen_at, updated_at)
+                VALUES (?, ?, ?, 1, NOW(), NOW())
+                AS new
+                ON DUPLICATE KEY UPDATE
+                  rank_no      = new.rank_no,
+                  profit_rate  = new.profit_rate,
+                  in_top10     = 1,
+                  last_seen_at = NOW(),
+                  updated_at   = NOW()
+            """,
+                    top10, top10.size(),
                     (ps, item) -> {
                         ps.setString(1, item.getUserId());
                         ps.setInt(2, item.getRankNo());
                         ps.setDouble(3, item.getProfitRate());
-                    }
-            );
+                    });
 
-            //스냅샷에서 제외된 사용자 삭제 (이번 리스트에 없는 사람)
-
-            if (incomingSet.isEmpty()) {
-                jdbc.update("DELETE FROM notify.ranking_top10");
-            } else {
-                String placeholders = String.join(",", incomingSet.stream().map(x -> "?").toList());
-                String sql = "DELETE FROM notify.ranking_top10 WHERE user_id NOT IN (" + placeholders + ")";
+            // 2) 이번 리스트에 없는 기존 활성 유저들만 비활성화 (삭제 금지)
+            //    - 중복 제거 & 순서 유지: LinkedHashSet
+            Set<String> incoming = new LinkedHashSet<>(top10.stream().map(RankItem::getUserId).toList());
+            if (!incoming.isEmpty()) {
+                String placeholders = String.join(",", incoming.stream().map(x -> "?").toList());
+                String sql = "UPDATE notify.ranking_top10_v2 " +
+                             "   SET in_top10=0, dropped_at=IFNULL(dropped_at, NOW()), updated_at=NOW() " +
+                             " WHERE in_top10=1 AND user_id NOT IN (" + placeholders + ")";
                 jdbc.update(con -> {
                     var ps = con.prepareStatement(sql);
-                    int idx = 1;
-                    for (String u : incomingSet) ps.setString(idx++, u);
+                    int i = 1;
+                    for (String u : incoming) ps.setString(i++, u);
                     return ps;
                 });
             }
 
-            //  순위 알림
+            // 3) 알림(중복 방지 dedup_key)
             for (RankItem item : top10) {
                 String userId = item.getUserId();
                 int rankNo = item.getRankNo();
@@ -89,17 +91,15 @@ public class RankingConsumerService {
 
                 jdbc.update("""
                     INSERT IGNORE INTO notify.notification_event
-                      (user_id, type, title, message, data, dedup_key, created_at)
-                    VALUES
-                      (?, 'RANKING', ?, ?, ?, ?, NOW())
+                        (user_id, type, title, message, data, dedup_key, created_at)
+                    VALUES (?, 'RANKING', ?, ?, ?, ?, NOW())
                 """, userId, title, msg, data, dedupKey);
             }
 
             ack.acknowledge();
         } catch (Exception e) {
             log.error("❌ Failed to process ranking message: {}", message, e);
-            // ack 생략 → 재처리
-            throw new RuntimeException(e); // 트랜잭션 롤백
+            throw new RuntimeException(e);
         }
     }
 }
