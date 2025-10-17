@@ -83,7 +83,7 @@ public class RankingConsumerService {
                 int rankNo = item.getRankNo();
                 double profitRate = item.getProfitRate();
 
-                String title = String.format("🎉 실시간 수익률 랭킹 %d위 진입!", rankNo);
+                String title = String.format("🎉 실시간 수익률 랭킹 %d위", rankNo);
                 String msg = String.format("현재 수익률: %.2f%%", profitRate);
                 String data = String.format("{\"user_id\":\"%s\",\"rank_no\":%d,\"profit_rate\":%.2f}",
                         userId, rankNo, profitRate);
